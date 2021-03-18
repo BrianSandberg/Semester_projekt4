@@ -17,13 +17,14 @@ except socket.error as e:
     str(e)
 
 #sock.listen() "opens" up the port so that we can start connecting to it. The argument is the max number of connections
-sock.listen()
+sock.listen(20)
 
 print("Waiting for connection, Server started")
 
 #Everything before this is esentially the server, without functionality
 
 def threaded_client(conn):
+    conn.send(str.encode("Connected"))
     reply = ""
 
     while True:
@@ -45,6 +46,8 @@ def threaded_client(conn):
         #Breaks in case of anything unexpectet happening
         except:
             break
+    print("Lost connection")
+    conn.close()
 
 
 while True:
