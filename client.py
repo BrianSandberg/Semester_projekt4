@@ -1,4 +1,5 @@
 import pygame
+from network import Network
 
 width = 500
 height = 500
@@ -42,31 +43,59 @@ class Player():
         if keys[pygame.K_DOWN] and self.y < height-self.height:
             self.y += self.vel
 
+        self.update()
+
+    def update(self):
         #Redefines the rect, while the if-statements only redifines the self.values. Updates the rect in draw()
         self.rect = (self.x, self.y, self.width, self.height)
 
+#Takes the position as a string, splits it by comma, and returns it as a touple wchich we can use
+def read_pos(str):
+    #Has to check if the string is not empty - It starts off empty, so we have to check before we can run the program i think
+    if str is not None:
+        str = str.split(",")
+        return int(str[0]), int(str[1])
+
+#Makes the position out of a touple
+def make_pos(tup):
+    return str(tup[0]) + "," + str(tup[1])
+
 #Pygame window
-def redrawWindow(win,player):
+def redrawWindow(win,player, player2):
     win.fill((255,255,255))
     player.draw(win)
+    player2.draw(win)
     pygame.display.update()
 
 #main loop - This is always running while the game is running - Asks the server for information
 def main():
     run = True
-    p = Player(50,50,100,100,(0,255,0))
+
+    n = Network()
+    startPos = read_pos(n.getPos())
+
+    p = Player(startPos[0], startPos[1],100,100,(0,255,0))
+    p2 = Player(50,50,100,100,(255,0,0))
     #Create a clock so we can control the framerate of the game
     clock = pygame.time.Clock()
 
     while run:
         #Clock.tick() sets the framerate of the loop - Higher number = higher framerate = faster parsing of actions = faster game
         clock.tick(60)
+
+        #Algorithm to send current clients position, and recieving the other clients position
+        p2Pos = read_pos(n.send(make_pos((p.x, p.y))))
+        p2.x = p2Pos[0]
+        p2.y = p2Pos[1]
+        p2.update()
+
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
 
         p.move()
-        redrawWindow(win, p)
+        redrawWindow(win, p, p2)
 
 main()
